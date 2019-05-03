@@ -7,7 +7,7 @@ global:
   # Attach these labels to any time series or alerts when communicating with
   # external systems (federation, remote storage, Alertmanager).
   external_labels:
-      monitor: 'pihole-monitor'
+      monitor: 'adguard-monitor'
 
 # Load and evaluate rules in this file every 'evaluation_interval' seconds.
 rule_files:
@@ -29,6 +29,6 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9191']
 
-  - job_name: 'pihole'
+  - job_name: 'adguard'
     static_configs:
       - targets: ['localhost:9311']

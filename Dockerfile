@@ -1,12 +1,16 @@
 FROM golang:alpine AS build
-RUN apk add --no-cache alpine-sdk bash
-WORKDIR /go/src/github.com/povilasv/pihole_exporter
-COPY . .
-RUN go build -o /app/pihole_exporter pihole_exporter.go && chmod +x /app/pihole_exporter
+RUN apk update && apk add git
+
+WORKDIR /go/src/github.com/darookee/adguard_exporter/
+
+ADD . .
+RUN go get -t -v ./...
+RUN go build -o /adguard_exporter main.go && chmod +x /adguard_exporter
 
 FROM alpine:latest
-COPY --from=build /app/pihole_exporter /app/pihole_exporter
-WORKDIR /app
-ENTRYPOINT ["./pihole_exporter"]
+
+COPY --from=build /adguard_exporter /adguard_exporter
+WORKDIR /
+ENTRYPOINT ["./adguard_exporter"]
 CMD ["-h"]
 EXPOSE 9311

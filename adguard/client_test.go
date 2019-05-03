@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pihole
+package adguard
 
 import (
 	"io/ioutil"
@@ -23,11 +23,11 @@ import (
 	"github.com/prometheus/common/log"
 )
 
-type piholeserver struct {
+type adguardserver struct {
 	*httptest.Server
 }
 
-func handler(server *piholeserver, uri string, filename string) http.HandlerFunc {
+func handler(server *adguardserver, uri string, filename string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		b, err := ioutil.ReadFile(filename)
 		if err != nil {
@@ -37,14 +37,14 @@ func handler(server *piholeserver, uri string, filename string) http.HandlerFunc
 	}
 }
 
-func newPiholeServer(uri, filename string) *piholeserver {
-	h := &piholeserver{}
+func newadguardServer(uri, filename string) *adguardserver {
+	h := &adguardserver{}
 	h.Server = httptest.NewServer(handler(h, uri, filename))
 	return h
 }
 
-func getClientAndServer(t *testing.T, uri, filename string) (*piholeserver, *Client) {
-	h := newPiholeServer(uri, filename)
+func getClientAndServer(t *testing.T, uri, filename string) (*adguardserver, *Client) {
+	h := newadguardServer(uri, filename)
 	client, err := NewClient(h.URL)
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -52,7 +52,7 @@ func getClientAndServer(t *testing.T, uri, filename string) (*piholeserver, *Cli
 	return h, client
 }
 
-func TestPiholeGetMetrics(t *testing.T) {
+func TestadguardGetMetrics(t *testing.T) {
 	server, client := getClientAndServer(t, "", "testdata/stats.json")
 	defer server.Close()
 	metrics, err := client.GetMetrics()
@@ -60,9 +60,7 @@ func TestPiholeGetMetrics(t *testing.T) {
 		log.Fatalf("%v", err)
 	}
 	log.Infof("Metrics response: %s", metrics)
-	if metrics.DomainsBeingBlocked != 122074 ||
-		metrics.DNSQueriesToday != 5817 {
-
+	if metrics.dnsQueries != 100000 {
 		log.Fatalf("Invalid metrics response: %s", metrics)
 	}
 }

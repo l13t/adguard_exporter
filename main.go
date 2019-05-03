@@ -21,14 +21,14 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/povilasv/pihole_exporter/pihole"
+	"github.com/darookee/adguard_exporter/adguard"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
 )
 
 const (
-	banner    = "pihole_exporter - %s\n"
-	namespace = "pihole"
+	banner    = "adguard_exporter - %s\n"
+	namespace = "adguard"
 )
 
 var (
@@ -39,141 +39,95 @@ var (
 	endpoint            string
 	logLevel            string
 	logFormat           string
-	domainsBeingBlocked = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "domains_being_blocked"),
-		"Domains being blocked.",
-		nil, nil,
-	)
-	dnsQueries = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "dns_queries_today"),
-		"DNS Queries today.",
-		nil, nil,
-	)
-	adsBlocked = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "ads_blocked_today"),
-		"Ads blocked today.",
-		nil, nil,
-	)
-
-	adsPercentage = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "ads_percentage_today"),
-		"Ads percentage today.",
-		nil, nil,
-	)
-
-	domainsOverTime = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "domains_over_time"),
-		"Domains over time.",
-		nil, nil,
-	)
-
-	adsOverTime = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "ads_over_time"),
-		"Ads over time.",
-		nil, nil,
-	)
-
-	topQueries = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "top_queries"),
-		"Top queries.",
-		[]string{"domain"}, nil,
-	)
-
-	topAds = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "top_ads"),
-		"Top Ads.",
-		[]string{"domain"}, nil,
-	)
-	topSources = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "top_sources"),
-		"Top sources.",
-		[]string{"client"}, nil,
-	)
-	queryTypes = prometheus.NewDesc(
-		prometheus.BuildFQName(namespace, "", "query_types"),
-		"DNS Query types.",
-		[]string{"type"}, nil,
-	)
+    avgProcessingTime = prometheus.NewDesc(
+        prometheus.BuildFQName(namespace, "", "avg_processing_time"),
+        "Average processing time.",
+        nil, nil,
+    )
+    dnsQueries = prometheus.NewDesc(
+        prometheus.BuildFQName(namespace, "", "dns_queries"),
+        "Total number of DNS queries.",
+        nil, nil,
+    )
+    blockedFiltering = prometheus.NewDesc(
+        prometheus.BuildFQName(namespace, "", "blocked_filtering"),
+        "Domains blocked.",
+        nil, nil,
+    )
+    replacedParental = prometheus.NewDesc(
+        prometheus.BuildFQName(namespace, "", "replaced_parental"),
+        "Parental Control blocked.",
+        nil, nil,
+    )
+    replacedSafebrowsing = prometheus.NewDesc(
+        prometheus.BuildFQName(namespace, "", "replaced_safebrowsing"),
+        "Safebrowsing Control blocked.",
+        nil, nil,
+    )
+    replacedSafesearch = prometheus.NewDesc(
+        prometheus.BuildFQName(namespace, "", "replaced_safesearch"),
+        "Safesearch Control blocked.",
+        nil, nil,
+    )
 )
 
-// Exporter collects Pihole stats from the given server and exports them using
+// Exporter collects Adguard stats from the given server and exports them using
 // the prometheus metrics package.
 type Exporter struct {
-	Pihole *pihole.Client
+	Adguard *adguard.Client
 }
 
 // NewExporter returns an initialized Exporter.
 func NewExporter(endpoint string) (*Exporter, error) {
-	log.Infoln("Setup Pihole exporter using URL: %s", endpoint)
-	pihole, err := pihole.NewClient(endpoint)
+	log.Infoln("Setup Adguard exporter using URL: ", endpoint)
+	adguard, err := adguard.NewClient(endpoint)
 	if err != nil {
 		return nil, err
 	}
 	return &Exporter{
-		Pihole: pihole,
+		Adguard: adguard,
 	}, nil
 }
 
-// Describe describes all the metrics ever exported by the Pihole exporter.
+// Describe describes all the metrics ever exported by the Adguard exporter.
 // It implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
-	ch <- domainsBeingBlocked
-	ch <- dnsQueries
-	ch <- adsBlocked
-	ch <- adsPercentage
-	ch <- domainsOverTime
-	ch <- adsOverTime
-	ch <- topQueries
-	ch <- topAds
-	ch <- topSources
-	ch <- queryTypes
+    ch <- avgProcessingTime
+    ch <- dnsQueries
+    ch <- blockedFiltering
+    ch <- replacedParental
+    ch <- replacedSafebrowsing
+    ch <- replacedSafesearch
 }
 
 // Collect the stats from channel and delivers them as Prometheus metrics.
 // It implements prometheus.Collector.
 func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
-	resp, err := e.Pihole.GetMetrics()
+	resp, err := e.Adguard.GetMetrics()
 	if err != nil {
-		log.Errorf("Pihole error: %s", err.Error())
+		log.Errorf("Adguard error: %s", err.Error())
 		return
 	}
-	log.Debugf("PiHole metrics: %#v", resp)
+	log.Debugf("Adguard metrics: %#v", resp)
 	ch <- prometheus.MustNewConstMetric(
-		domainsBeingBlocked, prometheus.CounterValue, float64(resp.DomainsBeingBlocked))
-
+		avgProcessingTime, prometheus.CounterValue, float64(resp.AvgProcessingTime))
 	ch <- prometheus.MustNewConstMetric(
-		dnsQueries, prometheus.CounterValue, float64(resp.DNSQueriesToday))
-
+		dnsQueries, prometheus.CounterValue, float64(resp.DnsQueries))
 	ch <- prometheus.MustNewConstMetric(
-		adsBlocked, prometheus.CounterValue, float64(resp.AdsBlockedToday))
-
+		blockedFiltering, prometheus.CounterValue, float64(resp.BlockedFiltering))
 	ch <- prometheus.MustNewConstMetric(
-		adsPercentage, prometheus.CounterValue, float64(resp.AdsPercentageToday))
-
-	for k, v := range resp.Querytypes {
-		ch <- prometheus.MustNewConstMetric(
-			queryTypes, prometheus.CounterValue, v, k)
-	}
-	for k, v := range resp.TopQueries {
-		ch <- prometheus.MustNewConstMetric(
-			topQueries, prometheus.CounterValue, float64(v), k)
-	}
-	for k, v := range resp.TopAds {
-		ch <- prometheus.MustNewConstMetric(
-			topAds, prometheus.CounterValue, float64(v), k)
-
-	}
-	for k, v := range resp.TopSources {
-		ch <- prometheus.MustNewConstMetric(
-			topSources, prometheus.CounterValue, float64(v), k)
-	}
+		replacedParental, prometheus.CounterValue, float64(resp.ReplacedParental))
+	ch <- prometheus.MustNewConstMetric(
+		replacedSafebrowsing, prometheus.CounterValue, float64(resp.ReplacedSafebrowsing))
+	ch <- prometheus.MustNewConstMetric(
+		replacedSafesearch, prometheus.CounterValue, float64(resp.ReplacedSafesearch))
 }
 
 func init() {
 	flag.BoolVar(&version, "version", false, "print version and exit")
 	flag.StringVar(&listenAddress, "web.listen-address", ":9311", "Address to listen on for web interface and telemetry.")
 	flag.StringVar(&metricsPath, "web.telemetry-path", "/metrics", "Path under which to expose metrics.")
-	flag.StringVar(&endpoint, "pihole", "", "Endpoint of Pihole")
+	flag.StringVar(&endpoint, "adguard", "", "Endpoint of Adguard")
 	flag.StringVar(&logLevel, "log.level", "info", "Only log messages with the given severity or above. Valid levels: [debug, info, warn, error, fatal]")
 	flag.StringVar(&logFormat, "log.format", "logger:stderr", `Set the log target and format. Example: "logger:syslog?appname=bob&local=7" or "logger:stdout?json=true"`)
 	flag.Usage = func() {
@@ -184,7 +138,7 @@ func init() {
 	flag.Parse()
 
 	if version {
-		fmt.Printf("%s", pihole.Version)
+		fmt.Printf("%s", adguard.Version)
 		os.Exit(0)
 	}
 	if logLevel != "" {
@@ -202,7 +156,7 @@ func init() {
 	}
 
 	if len(endpoint) == 0 {
-		usageAndExit("Pihole endpoint cannot be empty.", 1)
+		usageAndExit("Adguard endpoint cannot be empty.", 1)
 	}
 }
 
@@ -218,9 +172,9 @@ func main() {
 	http.Handle(metricsPath, prometheus.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
-             <head><title>Pihole Exporter</title></head>
+             <head><title>Adguard Exporter</title></head>
              <body>
-             <h1>Pihole Exporter</h1>
+             <h1>Adguard Exporter</h1>
              <p><a href='` + metricsPath + `'>Metrics</a></p>
              </body>
              </html>`))

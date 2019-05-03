@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pihole
+package adguard
 
 import (
 	"encoding/json"
@@ -24,11 +24,11 @@ import (
 const (
 	acceptHeader = "application/json"
 	mediaType    = "application/json"
-	Version      = "0.3.3"
+	Version      = "0.0.1"
 )
 
 var (
-	userAgent = fmt.Sprintf("pihole-exporter/%s", Version)
+	userAgent = fmt.Sprintf("adguard-exporter/%s", Version)
 )
 
 type Client struct {
@@ -38,7 +38,7 @@ type Client struct {
 func NewClient(endpoint string) (*Client, error) {
 	url, err := url.Parse(endpoint)
 	if err != nil || url.Scheme != "http" {
-		return nil, fmt.Errorf("Invalid PiHole address: %s", err)
+		return nil, fmt.Errorf("Invalid adguard address: %s", err)
 	}
 	return &Client{
 		Endpoint: url.String(),
@@ -49,7 +49,7 @@ func (c *Client) setupHeaders(request *http.Request) {
 }
 
 func (client *Client) GetMetrics() (*Metrics, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/admin/api.php?summaryRaw&overTimeData&topItems&recentItems&getQueryTypes&getForwardDestinations&getQuerySources", client.Endpoint), nil)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/control/stats", client.Endpoint), nil)
 
 	req.Header.Add("Content-Type", mediaType)
 	req.Header.Add("Accept", acceptHeader)
