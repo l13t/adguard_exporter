@@ -23,6 +23,7 @@ import (
 
 	"github.com/darookee/adguard_exporter/adguard"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 )
 
@@ -32,43 +33,43 @@ const (
 )
 
 var (
-	debug               bool
-	version             bool
-	listenAddress       string
-	metricsPath         string
-	endpoint            string
-	logLevel            string
-	logFormat           string
-    avgProcessingTime = prometheus.NewDesc(
-        prometheus.BuildFQName(namespace, "", "avg_processing_time"),
-        "Average processing time.",
-        nil, nil,
-    )
-    dnsQueries = prometheus.NewDesc(
-        prometheus.BuildFQName(namespace, "", "dns_queries"),
-        "Total number of DNS queries.",
-        nil, nil,
-    )
-    blockedFiltering = prometheus.NewDesc(
-        prometheus.BuildFQName(namespace, "", "blocked_filtering"),
-        "Domains blocked.",
-        nil, nil,
-    )
-    replacedParental = prometheus.NewDesc(
-        prometheus.BuildFQName(namespace, "", "replaced_parental"),
-        "Parental Control blocked.",
-        nil, nil,
-    )
-    replacedSafebrowsing = prometheus.NewDesc(
-        prometheus.BuildFQName(namespace, "", "replaced_safebrowsing"),
-        "Safebrowsing Control blocked.",
-        nil, nil,
-    )
-    replacedSafesearch = prometheus.NewDesc(
-        prometheus.BuildFQName(namespace, "", "replaced_safesearch"),
-        "Safesearch Control blocked.",
-        nil, nil,
-    )
+	debug             bool
+	version           bool
+	listenAddress     string
+	metricsPath       string
+	endpoint          string
+	logLevel          string
+	logFormat         string
+	avgProcessingTime = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "avg_processing_time"),
+		"Average processing time.",
+		nil, nil,
+	)
+	dnsQueries = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "dns_queries"),
+		"Total number of DNS queries.",
+		nil, nil,
+	)
+	blockedFiltering = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "blocked_filtering"),
+		"Domains blocked.",
+		nil, nil,
+	)
+	replacedParental = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "replaced_parental"),
+		"Parental Control blocked.",
+		nil, nil,
+	)
+	replacedSafebrowsing = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "replaced_safebrowsing"),
+		"Safebrowsing Control blocked.",
+		nil, nil,
+	)
+	replacedSafesearch = prometheus.NewDesc(
+		prometheus.BuildFQName(namespace, "", "replaced_safesearch"),
+		"Safesearch Control blocked.",
+		nil, nil,
+	)
 )
 
 // Exporter collects Adguard stats from the given server and exports them using
@@ -92,12 +93,12 @@ func NewExporter(endpoint string) (*Exporter, error) {
 // Describe describes all the metrics ever exported by the Adguard exporter.
 // It implements prometheus.Collector.
 func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
-    ch <- avgProcessingTime
-    ch <- dnsQueries
-    ch <- blockedFiltering
-    ch <- replacedParental
-    ch <- replacedSafebrowsing
-    ch <- replacedSafesearch
+	ch <- avgProcessingTime
+	ch <- dnsQueries
+	ch <- blockedFiltering
+	ch <- replacedParental
+	ch <- replacedSafebrowsing
+	ch <- replacedSafesearch
 }
 
 // Collect the stats from channel and delivers them as Prometheus metrics.
@@ -169,7 +170,7 @@ func main() {
 	log.Infoln("Register exporter")
 	prometheus.MustRegister(exporter)
 
-	http.Handle(metricsPath, prometheus.Handler())
+	http.Handle(metricsPath, promhttp.Handler())
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
              <head><title>Adguard Exporter</title></head>
