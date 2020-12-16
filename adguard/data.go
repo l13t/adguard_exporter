@@ -18,10 +18,10 @@
 package adguard
 
 type Metrics struct {
-	AvgProcessingTime    float64            `json:"avg_processing_time"`
-	BlockedFiltering     int                `json:"blocked_filtering"`
-	DnsQueries           int                `json:"dns_queries"`
-	ReplacedParental     int                `json:"replaced_parental"`
-	ReplacedSafebrowsing int                `json:"replaced_safebrowsing"`
-	ReplacedSafesearch   int                `json:"replaced_safesearch"`
+	AvgProcessingTime    float64 `json:"avg_processing_time"`
+	BlockedFiltering     int     `json:"num_blocked_filtering"`
+	DnsQueries           int     `json:"num_dns_queries"`
+	ReplacedParental     int     `json:"num_replaced_parental"`
+	ReplacedSafebrowsing int     `json:"num_replaced_safebrowsing"`
+	ReplacedSafesearch   int     `json:"num_replaced_safesearch"`
 }

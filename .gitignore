@@ -1,6 +1,8 @@
 # Go
-pihole_exporter
-pihole_exporter-*
+adguard_exporter
+adguard_exporter-*
+
+go.sum
 
 # Files
 .DS_Store
