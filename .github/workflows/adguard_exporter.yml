@@ -35,7 +35,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push versioned image
-        id: docker_build
+        id: docker_build_versioned
         uses: docker/build-push-action@v2
         with:
           push: true
@@ -44,7 +44,7 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
       -
         name: Build and push latest
-        id: docker_build
+        id: docker_build_latest
         uses: docker/build-push-action@v2
         with:
           push: true
