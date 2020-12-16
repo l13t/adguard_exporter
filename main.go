@@ -21,7 +21,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/darookee/adguard_exporter/adguard"
+	"adguard_exporter/adguard"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
