@@ -6,23 +6,19 @@ Fork from `povilasv/pihole_exporter`.
 
 Modified to use the statistics AdGuardHome delivers.
 
-# Overview 
+## Overview
 
 This Prometheus exporter checks your [AdGuard](https://github.com/AdguardTeam/AdGuardHome) statistics. Available metrics are:
 
--   Average Responsetime
--   DNS Queries
--   Domains blocked
+- Average Responsetime
+- DNS Queries
+- Domains blocked
 
-## Docker Deployment
+### Run docker container
 
--   Build Image:
-
-    docker build -t adguard-exporter .
-
--   Start Container
-
-    docker run -d -p 9311:9311 adguard-exporter -adguard http://192.168.1.5
+```bash
+docker run l13t/adguard_exporter:<tagname> -adguard http://<adguard_username>:<adguard_pwd>@<adguard_url>
+```
 
 ## License
 
