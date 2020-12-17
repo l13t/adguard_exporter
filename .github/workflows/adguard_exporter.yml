@@ -2,11 +2,8 @@ name: AdGuard Exporter builder
 
 on:
   push:
-    branches:
-      - '**'
     tags:
       - 'v*.*.*'
-  pull_request:
 
 jobs:
   main:
